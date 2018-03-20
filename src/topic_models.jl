@@ -1,5 +1,12 @@
 module topic_models
 
-# package code goes here
+module Bayesian_mixtures
+
+# models
+include("./LDA/LDA.jl")
+include("./HDP/HDP.jl")
+
+# utils
+include("./corpora.jl")
 
 end # module
