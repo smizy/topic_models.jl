@@ -25,31 +25,6 @@ function get_params()
     return params
 end
 
-# compute the per-sample average log-likelihood of the given data
-function score(X_::Array)
-    @assert isdefined(params, :corpus)
-
-    ret = 0.0
-    @inbounds for (d, (N_d, X)) in enumerate(X_)
-        θ = params.Θ_[d, :]
-        @inbounds for (v, N_dv) in X
-            ϕ = params.Φ_'[v, :]
-            ret += N_dv * log(dot(θ, ϕ))
-        end
-    end
-    ret /= length(X_)
-
-    return ret
-end
-
-# compute the perplexity of the given data
-function perplexity(X_::Array)
-    @assert isdefined(params, :corpus)
-
-    ret = exp(- score(X_) * length(X_) / sum([N_d for (N_d, X) in X_]))
-    return ret
-end
-
 # return the most probable topn words in topic topicid
 function show_topic(topicid::Int; topn::Int=10)
     @assert isdefined(params, :corpus)
