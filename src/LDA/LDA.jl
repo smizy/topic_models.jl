@@ -66,7 +66,7 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Int)
                         log_p_k[k] -= log(N_k[k] + β * n_words)
                     end
 
-                    # sample z_d after normalizing
+                    # sample z_dn after normalizing
                     p_k = exp.(log_p_k - maximum(log_p_k))
                     z_dn[d][n] = sample(1:n_components, WeightVec(p_k / sum(p_k)))
 
