@@ -17,6 +17,13 @@ function fit(X_::Array, corpus::Vector; max_iter::Int=100, n_components::Int=10)
     cgs(X_, corpus, max_iter, n_components)
 end
 
+# get parameters for this estimator
+function get_params()
+    @assert isdefined(params, :corpus)
+
+    return params
+end
+
 # return the most probable topn words in topic topicid
 function show_topic(topicid::Int; topn::Int=10)
     @assert isdefined(params, :corpus)
