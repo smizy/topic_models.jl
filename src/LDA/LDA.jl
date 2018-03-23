@@ -1,7 +1,6 @@
 module LDA
 
 struct returns
-    Θ_::Array{Float64,2}
     Φ_::Array{Float64,2}
     corpus::Vector{String}
     n_components::Int
@@ -16,13 +15,6 @@ function fit(X_::Array, corpus::Vector; max_iter::Int=100, n_components::Int=10)
     @assert max_iter > 0 && n_components > 0
 
     cgs(X_, corpus, max_iter, n_components)
-end
-
-# get parameters for this estimator
-function get_params()
-    @assert isdefined(params, :corpus)
-
-    return params
 end
 
 # return the most probable topn words in topic topicid
@@ -84,10 +76,10 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Int)
 end
 
 function posteriori_estimation(corpus::Vector, n_components::Int, N_dk::Array, N_kv::Array)
-    Θ_ = (N_dk + α) ./ (sum(N_dk, 2) + α * n_components)
+    # Θ_ = (N_dk + α) ./ (sum(N_dk, 2) + α * n_components)
     Φ_ = (N_kv + β) ./ (sum(N_kv, 2) + β * length(corpus))
 
-    global params = returns(Θ_, Φ_, corpus, n_components)
+    global params = returns(Φ_, corpus, n_components)
 end
 
 end # module
