@@ -1,10 +1,7 @@
 module MGLDA
 
 struct returns
-    Θ_loc_::Array{Array{Float64,2},1}
-    Θ_gl_::Array{Array{Float64,2},1}
-    Φ_loc_::Array{Float64,2}
-    Φ_gl_::Array{Float64,2}
+    Φ_::Array{Float64,2}
     corpus::Vector{String}
     n_components::Tuple{Int,Int}
 end
@@ -40,10 +37,10 @@ function show_topic(topicid::Int; topictype::String="loc", topn::Int=10)
 
     if topictype == "loc"
         @assert 1 <= topicid <= params.n_components[1]
-        return [params.corpus[w] for w in sortperm(params.Φ_loc_[topicid, :], rev=true)[1:topn]]
+        return [params.corpus[w] for w in sortperm(params.Φ_[topicid, :], rev=true)[1:topn]]
     elseif topictype == "gl"
         @assert 1 <= topicid <= params.n_components[2]
-        return [params.corpus[w] for w in sortperm(params.Φ_gl_[topicid, :], rev=true)[1:topn]]
+        return [params.corpus[w] for w in sortperm(params.Φ_[params.n_components[1] + topicid, :], rev=true)[1:topn]]
     end
 end
 
@@ -176,38 +173,39 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Tuple, T::I
 end
 
 function posteriori_estimation(corpus::Vector, n_components::Tuple, T::Int, N_dsv::Array, N_dvr::Array, N_loc_zw::Array, N_loc_dvz::Array, N_gl_zw::Array, N_gl_dz::Array)
-    Θ_loc_dvz = Vector{Any}()
-    Θ_gl_dz   = (N_gl_dz + α_gl) ./ (sum(N_gl_dz, 2) + α_gl * n_components[2])
-    π_loc_dv  = Vector{Any}()
-    π_gl_dv   = Vector{Any}()
-    ψ_dsv     = Vector{Any}()
-    Θ_loc_dsz = Vector{Array{Float64,2}}()
-    Θ_gl_dsz  = Vector{Array{Float64,2}}()
-    for d in 1:size(N_dsv, 1)
-        push!(Θ_loc_dvz, (N_loc_dvz[d] + α_loc) ./ (sum(N_loc_dvz[d], 2) + α_loc * n_components[1]))
-        push!(π_loc_dv, (N_dvr[d][:,1] + a) ./ (sum(N_dvr[d], 2) + a + b))
-        push!(π_gl_dv, (N_dvr[d][:,2] + b) ./ (sum(N_dvr[d], 2) + a + b))
+    # Θ_loc_dsz = Vector{Array{Float64,2}}()
+    # Θ_gl_dsz  = Vector{Array{Float64,2}}()
+    # Θ_loc_dvz = Vector{Any}()
+    # Θ_gl_dz   = (N_gl_dz + α_gl) ./ (sum(N_gl_dz, 2) + α_gl * n_components[2])
+    # π_loc_dv  = Vector{Any}()
+    # π_gl_dv   = Vector{Any}()
+    # ψ_dsv     = Vector{Any}()
+    # for d in 1:size(N_dsv, 1)
+    #     push!(Θ_loc_dvz, (N_loc_dvz[d] + α_loc) ./ (sum(N_loc_dvz[d], 2) + α_loc * n_components[1]))
+    #     push!(π_loc_dv, (N_dvr[d][:,1] + a) ./ (sum(N_dvr[d], 2) + a + b))
+    #     push!(π_gl_dv, (N_dvr[d][:,2] + b) ./ (sum(N_dvr[d], 2) + a + b))
+    #
+    #     push!(ψ_dsv, zeros(size(N_dsv[d])))
+    #     S = size(N_dsv[d], 1)
+    #     push!(Θ_loc_dsz, zeros(S, n_components[1]))
+    #     push!(Θ_gl_dsz, zeros(S, n_components[2]))
+    #     for s in 1:S
+    #         for t in 1:T
+    #             v = s + t - 1
+    #             ψ_dsv[d][s, v] = (N_dsv[d][s, v] + γ) / (sum(N_dsv[d], 2)[s] + γ * T)
+    #
+    #             Θ_loc_dsz[d][s,:] += ψ_dsv[d][s, v] * π_loc_dv[d][v] .* Θ_loc_dvz[d][v,:]
+    #             Θ_gl_dsz[d][s,:]  += ψ_dsv[d][s, v] * π_gl_dv[d][v] .* Θ_gl_dz[d,:]
+    #         end
+    #     end
+    # end
 
-        push!(ψ_dsv, zeros(size(N_dsv[d])))
-        S = size(N_dsv[d], 1)
-        push!(Θ_loc_dsz, zeros(S, n_components[1]))
-        push!(Θ_gl_dsz, zeros(S, n_components[2]))
-        for s in 1:S
-            for t in 1:T
-                v = s + t - 1
-                ψ_dsv[d][s, v] = (N_dsv[d][s, v] + γ) / (sum(N_dsv[d], 2)[s] + γ * T)
+    n_words = length(corpus)
+    Φ_loc   = (N_loc_zw + β) ./ (sum(N_loc_zw, 2) + β * n_words)
+    Φ_gl    = (N_gl_zw + β) ./ (sum(N_gl_zw, 2) + β * n_words)
+    Φ_      = cat(1, Φ_loc, Φ_gl)
 
-                Θ_loc_dsz[d][s,:] += ψ_dsv[d][s, v] * π_loc_dv[d][v] .* Θ_loc_dvz[d][v,:]
-                Θ_gl_dsz[d][s,:]  += ψ_dsv[d][s, v] * π_gl_dv[d][v] .* Θ_gl_dz[d,:]
-            end
-        end
-    end
-
-    n_words  = length(corpus)
-    Φ_loc_zw = (N_loc_zw + β) ./ (sum(N_loc_zw, 2) + β * n_words)
-    Φ_gl_zw  = (N_gl_zw + β) ./ (sum(N_gl_zw, 2) + β * n_words)
-
-    global params = returns(Θ_loc_dsz, Θ_gl_dsz, Φ_loc_zw, Φ_gl_zw, corpus, n_components)
+    global params = returns(Φ_, corpus, n_components)
 end
 
 end # module
