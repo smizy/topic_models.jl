@@ -248,10 +248,10 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int)
 end
 
 function posteriori_estimation(corpus::Vector, n_components::Int, N_dk::Array, N_kv::Array)
-    # Θ_ = N_dk ./ sum(N_dk, 2)
-    Φ_ = (N_kv + β) ./ (sum(N_kv, 2) + β * length(corpus))
+    # θ_dk = N_dk ./ sum(N_dk, 2)
+    ϕ_kv = (N_kv + β) ./ (sum(N_kv, 2) + β * length(corpus))
 
-    global params = returns(Φ_, corpus, n_components)
+    global params = returns(ϕ_kv, corpus, n_components)
 end
 
 end # module
