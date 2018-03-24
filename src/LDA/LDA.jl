@@ -30,7 +30,7 @@ function show_topic(topicid::Int; topn::Int=10)
     @assert 1 <= topicid <= params.n_components
     @assert topn <= length(params.corpus)
 
-    return [params.corpus[v] for v in sortperm(params.Φ_[topicid, :], rev=true)[1:topn]]
+    return [params.corpus[v] for v in sortperm(params.Φ_[topicid,:], rev=true)[1:topn]]
 end
 
 # estimate model parameters with collapsed Gibbs sampling
@@ -53,16 +53,15 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Int)
                     # remove w_dv’s statistics
                     if z_dn[d][n] != 0
                         k = z_dn[d][n]
-                        N_dk[d, k] -= 1
-                        N_kv[k, v] -= 1
+                        N_dk[d,k] -= 1
+                        N_kv[k,v] -= 1
                         N_k[k]     -= 1
                     end
 
                     log_p_k = zeros(n_components)
                     @inbounds for k in 1:n_components
-                        log_p_k[k]  = log(N_dk[d, k] + α)
-                        log_p_k[k] += log(N_kv[k, v] + β)
-                        log_p_k[k] -= log(N_k[k] + β * n_words)
+                        log_p_k[k]  = log(N_dk[d,k] + α)
+                        log_p_k[k] += log(N_kv[k,v] + β) - log(N_k[k] + β * n_words)
                     end
 
                     # sample z_dn after normalizing
@@ -71,8 +70,8 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Int)
 
                     # add w_dv’s statistics
                     k = z_dn[d][n]
-                    N_dk[d, k] += 1
-                    N_kv[k, v] += 1
+                    N_dk[d,k] += 1
+                    N_kv[k,v] += 1
                     N_k[k]     += 1
                 end
             end

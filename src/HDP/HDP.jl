@@ -31,7 +31,7 @@ function show_topic(topicid::Int; topn::Int=10)
     @assert 1 <= topicid <= params.n_components
     @assert topn <= length(params.corpus)
 
-    return [params.corpus[v] for v in sortperm(params.Φ_[topicid, :], rev=true)[1:topn]]
+    return [params.corpus[v] for v in sortperm(params.Φ_[topicid,:], rev=true)[1:topn]]
 end
 
 # estimate model parameters with collapsed Gibbs sampling
@@ -63,10 +63,10 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int)
                     if t_dn[d][n] != 0
                         ℓ = t_dn[d][n]
                         k = z_dℓ[d][ℓ]
-                        N_dℓv[d][ℓ, v] -= 1
-                        N_dℓ[d][ℓ]     -= 1
-                        N_kv[k, v]     -= 1
-                        N_k[k]         -= 1
+                        N_dℓv[d][ℓ,v] -= 1
+                        N_dℓ[d][ℓ]    -= 1
+                        N_kv[k,v]     -= 1
+                        N_k[k]        -= 1
 
                         # if any component is empty, remove it and decrease n_tables
                         if N_dℓ[d][ℓ] == 0
@@ -75,7 +75,7 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int)
                             M           -= 1
                             deleteat!(z_dℓ[d], ℓ)
                             deleteat!(N_dℓ[d], ℓ)
-                            N_dℓv[d] = N_dℓv[d][setdiff(1:end, ℓ), :]
+                            N_dℓv[d] = N_dℓv[d][setdiff(1:end, ℓ),:]
                             @inbounds for (tmp_n, tmp_t) in enumerate(t_dn[d])
                                 if tmp_t > ℓ
                                     t_dn[d][tmp_n] -= 1
@@ -87,7 +87,7 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int)
                                 n_components -= 1
                                 deleteat!(M_k, k)
                                 deleteat!(N_k, k)
-                                N_kv = N_kv[setdiff(1:end, k), :]
+                                N_kv = N_kv[setdiff(1:end, k),:]
 
                                 @inbounds for tmp_d in 1:length(X_)
                                     @inbounds for (tmp_ℓ, tmp_z) in enumerate(z_dℓ[tmp_d])
@@ -106,25 +106,20 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int)
                     # existing components
                     @inbounds for ℓ in 1:n_tables[d]
                         log_p_ℓ[ℓ]  = log(N_dℓ[d][ℓ])
-                        log_p_ℓ[ℓ] += log(N_kv[z_dℓ[d][ℓ], v] + β)
-                        log_p_ℓ[ℓ] -= log(N_k[z_dℓ[d][ℓ]] + β * n_words)
+                        log_p_ℓ[ℓ] += log(N_kv[z_dℓ[d][ℓ], v] + β) - log(N_k[z_dℓ[d][ℓ]] + β * n_words)
                     end
 
                     # new components
                     @inbounds for k in 1:n_components
                         ℓ = n_tables[d] + k
                         log_p_ℓ[ℓ]  = log(α)
-                        log_p_ℓ[ℓ] += log(M_k[k])
-                        log_p_ℓ[ℓ] -= log(M + γ)
-                        log_p_ℓ[ℓ] += log(N_kv[k, v] + β)
-                        log_p_ℓ[ℓ] -= log(N_k[k] + β * n_words)
+                        log_p_ℓ[ℓ] += log(M_k[k]) - log(M + γ)
+                        log_p_ℓ[ℓ] += log(N_kv[k,v] + β) - log(N_k[k] + β * n_words)
                     end
 
                     log_p_ℓ[L]  = log(α)
-                    log_p_ℓ[L] += log(γ)
-                    log_p_ℓ[L] -= log(M + γ)
-                    log_p_ℓ[L] += log(β)
-                    log_p_ℓ[L] -= log(β * n_words)
+                    log_p_ℓ[L] += log(γ) - log(M + γ)
+                    log_p_ℓ[L] += log(β) - log(β * n_words)
 
                     # sample t_dn after normalizing
                     p_ℓ = exp.(log_p_ℓ - maximum(log_p_ℓ))
@@ -156,10 +151,10 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int)
                     # add w_dv’s statistics
                     ℓ = t_dn[d][n]
                     k = z_dℓ[d][ℓ]
-                    N_dℓv[d][ℓ, v] += 1
-                    N_dℓ[d][ℓ]     += 1
-                    N_kv[k, v]     += 1
-                    N_k[k]         += 1
+                    N_dℓv[d][ℓ,v] += 1
+                    N_dℓ[d][ℓ]    += 1
+                    N_kv[k,v]     += 1
+                    N_k[k]        += 1
                 end
             end
 
@@ -171,8 +166,8 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int)
                     k = z_dℓ[d][ℓ]
                     M_k[k] -= 1
                     @inbounds for (v, N_dv) in X
-                        N_kv[k, v] -= N_dℓv[d][ℓ, v]
-                        N_k[k]     -= N_dℓv[d][ℓ, v]
+                        N_kv[k,v] -= N_dℓv[d][ℓ,v]
+                        N_k[k]    -= N_dℓv[d][ℓ,v]
                     end
 
                     # if any component is empty, remove it and decrease n_components
@@ -180,7 +175,7 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int)
                         n_components -= 1
                         deleteat!(M_k, k)
                         deleteat!(N_k, k)
-                        N_kv = N_kv[setdiff(1:end, k), :]
+                        N_kv = N_kv[setdiff(1:end, k),:]
 
                         @inbounds for tmp_d in 1:length(X_)
                             @inbounds for (tmp_ℓ, tmp_z) in enumerate(z_dℓ[tmp_d])
@@ -198,21 +193,17 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int)
                 # existing components
                 @inbounds for k in 1:n_components
                     log_p_k[k]  = log(M_k[k])
-                    log_p_k[k] += lgamma(N_k[k] + β * n_words)
-                    log_p_k[k] -= lgamma(N_k[k] + N_dℓ[d][ℓ] + β * n_words)
+                    log_p_k[k] += lgamma(N_k[k] + β * n_words) - lgamma(N_k[k] + N_dℓ[d][ℓ] + β * n_words)
                     @inbounds for (v, N_dv) in X
-                        log_p_k[k] += lgamma(N_kv[k, v] + N_dℓv[d][ℓ, v] + β)
-                        log_p_k[k] -= lgamma(N_kv[k, v] + β)
+                        log_p_k[k] += lgamma(N_kv[k,v] + N_dℓv[d][ℓ,v] + β) - lgamma(N_kv[k,v] + β)
                     end
                 end
 
                 # a new component
                 log_p_k[K]  = log(γ)
-                log_p_k[K] += lgamma(β * n_words)
-                log_p_k[K] -= lgamma(N_dℓ[d][ℓ] + β * n_words)
+                log_p_k[K] += lgamma(β * n_words) - lgamma(N_dℓ[d][ℓ] + β * n_words)
                 @inbounds for (v, N_dv) in X
-                    log_p_k[K] += lgamma(N_dℓv[d][ℓ, v] + β)
-                    log_p_k[K] -= lgamma(β)
+                    log_p_k[K] += lgamma(N_dℓv[d][ℓ,v] + β) - lgamma(β)
                 end
 
                 # sample z_dℓ after normalizing
@@ -230,8 +221,8 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int)
                 k = z_dℓ[d][ℓ]
                 M_k[k] += 1
                 @inbounds for (v, N_dv) in X
-                    N_kv[k, v] += N_dℓv[d][ℓ, v]
-                    N_k[k]     += N_dℓv[d][ℓ, v]
+                    N_kv[k,v] += N_dℓv[d][ℓ,v]
+                    N_k[k]    += N_dℓv[d][ℓ,v]
                 end
             end
         end

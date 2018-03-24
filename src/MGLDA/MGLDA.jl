@@ -37,10 +37,10 @@ function show_topic(topicid::Int; topictype::String="loc", topn::Int=10)
 
     if topictype == "loc"
         @assert 1 <= topicid <= params.n_components[1]
-        return [params.corpus[w] for w in sortperm(params.Φ_[topicid, :], rev=true)[1:topn]]
+        return [params.corpus[w] for w in sortperm(params.Φ_[topicid,:], rev=true)[1:topn]]
     elseif topictype == "gl"
         @assert 1 <= topicid <= params.n_components[2]
-        return [params.corpus[w] for w in sortperm(params.Φ_[params.n_components[1] + topicid, :], rev=true)[1:topn]]
+        return [params.corpus[w] for w in sortperm(params.Φ_[params.n_components[1]+topicid,:], rev=true)[1:topn]]
     end
 end
 
@@ -83,23 +83,23 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Tuple, T::I
                             z = z_dsn[d][s][n]
                             v = v_dsn[d][s][n]
 
-                            N_dsv[d][s, v] -= 1
-                            N_dvr[d][v, r] -= 1
-                            N_dv[d][v]     -= 1
+                            N_dsv[d][s,v] -= 1
+                            N_dvr[d][v,r] -= 1
+                            N_dv[d][v]    -= 1
 
                             # loc
                             if r == 1
-                                N_loc_zw[z, w]     -= 1
-                                N_loc_z[z]         -= 1
-                                N_loc_dvz[d][v, z] -= 1
-                                N_loc_dv[d][v]     -= 1
+                                N_loc_zw[z,w]     -= 1
+                                N_loc_z[z]        -= 1
+                                N_loc_dvz[d][v,z] -= 1
+                                N_loc_dv[d][v]    -= 1
 
                             # gl
                             elseif r == 2
-                                N_gl_zw[z, w] -= 1
-                                N_gl_z[z]     -= 1
-                                N_gl_dz[d, z] -= 1
-                                N_gl_d[d]     -= 1
+                                N_gl_zw[z,w] -= 1
+                                N_gl_z[z]    -= 1
+                                N_gl_dz[d,z] -= 1
+                                N_gl_d[d]    -= 1
                             end
                         end
 
@@ -109,19 +109,19 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Tuple, T::I
                             v = s + t - 1
 
                             # loc
-                            log_p_loc_vz[t,:] += log(N_dsv[d][s, v] + γ) # - log(N_ds + γ * T)
-                            log_p_loc_vz[t,:] += log(N_dvr[d][v, 1] + a) # - log(X_[d][2][v] + a + b)
+                            log_p_loc_vz[t,:] += log(N_dsv[d][s,v] + γ) # - log(N_ds + γ * T)
+                            log_p_loc_vz[t,:] += log(N_dvr[d][v,1] + a) # - log(X_[d][2][v] + a + b)
                             for k in 1:n_components[1]
-                                log_p_loc_vz[t, k] += log(N_loc_zw[k, w] + β) - log(N_loc_z[k] + β * n_words)
-                                log_p_loc_vz[t, k] += log(N_loc_dvz[d][v, k] + α_loc) - log(N_loc_dv[d][v] + α_loc * n_components[1])
+                                log_p_loc_vz[t,k] += log(N_loc_zw[k,w] + β) - log(N_loc_z[k] + β * n_words)
+                                log_p_loc_vz[t,k] += log(N_loc_dvz[d][v,k] + α_loc) - log(N_loc_dv[d][v] + α_loc * n_components[1])
                             end
 
                             # gl
-                            log_p_gl_vz[t,:] += log(N_dsv[d][s, v] + γ) # - log(N_ds + γ * T)
-                            log_p_gl_vz[t,:] += log(N_dvr[d][v, 2] + b) # - log(X_[d][2][v] + a + b)
+                            log_p_gl_vz[t,:] += log(N_dsv[d][s,v] + γ) # - log(N_ds + γ * T)
+                            log_p_gl_vz[t,:] += log(N_dvr[d][v,2] + b) # - log(X_[d][2][v] + a + b)
                             for k in 1:n_components[2]
-                                log_p_gl_vz[t, k] += log(N_gl_zw[k, w] + β) - log(N_gl_z[k] + β * n_words)
-                                log_p_gl_vz[t, k] += log(N_gl_dz[d, k] + α_gl) - log(N_gl_d[d] + α_gl * n_components[2])
+                                log_p_gl_vz[t,k] += log(N_gl_zw[k,w] + β) - log(N_gl_z[k] + β * n_words)
+                                log_p_gl_vz[t,k] += log(N_gl_dz[d,k] + α_gl) - log(N_gl_d[d] + α_gl * n_components[2])
                             end
                         end
 
@@ -145,23 +145,23 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Tuple, T::I
                         z = z_dsn[d][s][n]
                         v = v_dsn[d][s][n]
 
-                        N_dsv[d][s, v] += 1
-                        N_dvr[d][v, r] += 1
-                        N_dv[d][v]     += 1
+                        N_dsv[d][s,v] += 1
+                        N_dvr[d][v,r] += 1
+                        N_dv[d][v]    += 1
 
                         # loc
                         if r == 1
-                            N_loc_zw[z, w]     += 1
-                            N_loc_z[z]         += 1
-                            N_loc_dvz[d][v, z] += 1
-                            N_loc_dv[d][v]     += 1
+                            N_loc_zw[z,w]     += 1
+                            N_loc_z[z]        += 1
+                            N_loc_dvz[d][v,z] += 1
+                            N_loc_dv[d][v]    += 1
 
                         # gl
                         elseif r == 2
-                            N_gl_zw[z, w] += 1
-                            N_gl_z[z]     += 1
-                            N_gl_dz[d, z] += 1
-                            N_gl_d[d]     += 1
+                            N_gl_zw[z,w] += 1
+                            N_gl_z[z]    += 1
+                            N_gl_dz[d,z] += 1
+                            N_gl_d[d]    += 1
                         end
                     end
                 end
@@ -192,10 +192,10 @@ function posteriori_estimation(corpus::Vector, n_components::Tuple, T::Int, N_ds
     #     for s in 1:S
     #         for t in 1:T
     #             v = s + t - 1
-    #             ψ_dsv[d][s, v] = (N_dsv[d][s, v] + γ) / (sum(N_dsv[d], 2)[s] + γ * T)
+    #             ψ_dsv[d][s,v] = (N_dsv[d][s,v] + γ) / (sum(N_dsv[d], 2)[s] + γ * T)
     #
-    #             θ_loc_dsz[d][s,:] += ψ_dsv[d][s, v] * π_loc_dv[d][v] .* θ_loc_dvz[d][v,:]
-    #             θ_gl_dsz[d][s,:]  += ψ_dsv[d][s, v] * π_gl_dv[d][v] .* θ_gl_dz[d,:]
+    #             θ_loc_dsz[d][s,:] += ψ_dsv[d][s,v] * π_loc_dv[d][v] .* θ_loc_dvz[d][v,:]
+    #             θ_gl_dsz[d][s,:]  += ψ_dsv[d][s,v] * π_gl_dv[d][v] .* θ_gl_dz[d,:]
     #         end
     #     end
     # end
