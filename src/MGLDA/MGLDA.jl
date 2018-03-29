@@ -192,7 +192,7 @@ function posteriori_estimation(corpus::Vector, n_components::Tuple, T::Int, N_ds
     #     for s in 1:S
     #         for t in 1:T
     #             v = s + t - 1
-    #             ψ_dsv[d][s,v] = (N_dsv[d][s,v] + γ) / (sum(N_dsv[d], 2)[s] + γ * T)
+    #             ψ_dsv[d][s,v] = (N_dsv[d][s,v] + γ) / (sum(N_dsv[d][s,:]) + γ * T)
     #
     #             θ_loc_dsz[d][s,:] += ψ_dsv[d][s,v] * π_loc_dv[d][v] .* θ_loc_dvz[d][v,:]
     #             θ_gl_dsz[d][s,:]  += ψ_dsv[d][s,v] * π_gl_dv[d][v] .* θ_gl_dz[d,:]
