@@ -111,7 +111,7 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Tuple, T::I
                             # loc
                             log_p_loc_vz[t,:] += log(N_dsv[d][s,v] + γ) # - log(N_ds + γ * T)
                             log_p_loc_vz[t,:] += log(N_dvr[d][v,1] + a) # - log(X_[d][2][v] + a + b)
-                            for k in 1:n_components[1]
+                            @inbounds for k in 1:n_components[1]
                                 log_p_loc_vz[t,k] += log(N_loc_zw[k,w] + β) - log(N_loc_z[k] + β * n_words)
                                 log_p_loc_vz[t,k] += log(N_loc_dvz[d][v,k] + α_loc) - log(N_loc_dv[d][v] + α_loc * n_components[1])
                             end
@@ -119,7 +119,7 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Tuple, T::I
                             # gl
                             log_p_gl_vz[t,:] += log(N_dsv[d][s,v] + γ) # - log(N_ds + γ * T)
                             log_p_gl_vz[t,:] += log(N_dvr[d][v,2] + b) # - log(X_[d][2][v] + a + b)
-                            for k in 1:n_components[2]
+                            @inbounds for k in 1:n_components[2]
                                 log_p_gl_vz[t,k] += log(N_gl_zw[k,w] + β) - log(N_gl_z[k] + β * n_words)
                                 log_p_gl_vz[t,k] += log(N_gl_dz[d,k] + α_gl) - log(N_gl_d[d] + α_gl * n_components[2])
                             end
@@ -180,7 +180,7 @@ function posteriori_estimation(corpus::Vector, n_components::Tuple, T::Int, N_ds
     # π_loc_dv  = Vector{Any}()
     # π_gl_dv   = Vector{Any}()
     # ψ_dsv     = Vector{Any}()
-    # for d in 1:size(N_dsv, 1)
+    # @inbounds for d in 1:size(N_dsv, 1)
     #     push!(θ_loc_dvz, (N_loc_dvz[d] + α_loc) ./ (sum(N_loc_dvz[d], 2) + α_loc * n_components[1]))
     #     push!(π_loc_dv, (N_dvr[d][:,1] + a) ./ (sum(N_dvr[d], 2) + a + b))
     #     push!(π_gl_dv, (N_dvr[d][:,2] + b) ./ (sum(N_dvr[d], 2) + a + b))
@@ -189,8 +189,8 @@ function posteriori_estimation(corpus::Vector, n_components::Tuple, T::Int, N_ds
     #     S = size(N_dsv[d], 1)
     #     push!(θ_loc_dsz, zeros(S, n_components[1]))
     #     push!(θ_gl_dsz, zeros(S, n_components[2]))
-    #     for s in 1:S
-    #         for t in 1:T
+    #     @inbounds for s in 1:S
+    #         @inbounds for t in 1:T
     #             v = s + t - 1
     #             ψ_dsv[d][s,v] = (N_dsv[d][s,v] + γ) / (sum(N_dsv[d][s,:]) + γ * T)
     #
