@@ -55,7 +55,7 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Int)
                         k = z_dn[d][n]
                         N_dk[d,k] -= 1
                         N_kv[k,v] -= 1
-                        N_k[k]     -= 1
+                        N_k[k]    -= 1
                     end
 
                     log_p_k = zeros(n_components)
@@ -72,7 +72,7 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Int)
                     k = z_dn[d][n]
                     N_dk[d,k] += 1
                     N_kv[k,v] += 1
-                    N_k[k]     += 1
+                    N_k[k]    += 1
                 end
             end
         end
