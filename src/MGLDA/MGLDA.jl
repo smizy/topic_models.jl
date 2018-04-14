@@ -33,13 +33,13 @@ end
 function show_topic(topicid::Int; topictype::String="loc", topn::Int=10)
     @assert isdefined(params, :corpus)
     @assert topictype ∈ ["loc", "gl"]
-    @assert topn <= length(params.corpus)
+    @assert topn ≤ length(params.corpus)
 
     if topictype == "loc"
-        @assert 1 <= topicid <= params.n_components[1]
+        @assert 1 ≤ topicid ≤ params.n_components[1]
         return [params.corpus[w] for w in sortperm(params.Φ_[topicid,:], rev=true)[1:topn]]
     elseif topictype == "gl"
-        @assert 1 <= topicid <= params.n_components[2]
+        @assert 1 ≤ topicid ≤ params.n_components[2]
         return [params.corpus[w] for w in sortperm(params.Φ_[params.n_components[1]+topicid,:], rev=true)[1:topn]]
     end
 end
@@ -132,7 +132,7 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Tuple, T::I
                         ind_dsn        = sample(1:length(p_vz), WeightVec(p_vz / sum(p_vz)))
                         v_dsn[d][s][n] = s + rem(ind_dsn - 1, T)
 
-                        if ind_dsn <= T * n_components[1]
+                        if ind_dsn ≤ T * n_components[1]
                             r_dsn[d][s][n] = 1
                             z_dsn[d][s][n] = div(ind_dsn - 1, T) + 1
                         else

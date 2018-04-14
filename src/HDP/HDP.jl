@@ -28,8 +28,8 @@ end
 # return the most probable topn words in topic topicid
 function show_topic(topicid::Int; topn::Int=10)
     @assert isdefined(params, :corpus)
-    @assert 1 <= topicid <= params.n_components
-    @assert topn <= length(params.corpus)
+    @assert 1 ≤ topicid ≤ params.n_components
+    @assert topn ≤ length(params.corpus)
 
     return [params.corpus[v] for v in sortperm(params.Φ_[topicid,:], rev=true)[1:topn]]
 end
@@ -125,7 +125,7 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int)
                     p_ℓ = exp.(log_p_ℓ - maximum(log_p_ℓ))
                     ℓ = sample(1:L, WeightVec(p_ℓ / sum(p_ℓ)))
 
-                    if ℓ <= n_tables[d]
+                    if ℓ ≤ n_tables[d]
                         t_dn[d][n] = ℓ
                     else
                         t_dn[d][n] = n_tables[d] + 1
@@ -133,7 +133,7 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int)
                         push!(N_dℓ[d], 0)
                         N_dℓv[d] = cat(1, N_dℓv[d], zeros(Int, 1, n_words))
 
-                        if ℓ - n_tables[d] <= n_components
+                        if ℓ - n_tables[d] ≤ n_components
                             z_dℓ[d][t_dn[d][n]] = ℓ - n_tables[d]
                         else
                             z_dℓ[d][t_dn[d][n]] = n_components + 1

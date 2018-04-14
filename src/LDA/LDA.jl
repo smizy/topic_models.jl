@@ -27,8 +27,8 @@ end
 # return the most probable topn words in topic topicid
 function show_topic(topicid::Int; topn::Int=10)
     @assert isdefined(params, :corpus)
-    @assert 1 <= topicid <= params.n_components
-    @assert topn <= length(params.corpus)
+    @assert 1 ≤ topicid ≤ params.n_components
+    @assert topn ≤ length(params.corpus)
 
     return [params.corpus[v] for v in sortperm(params.Φ_[topicid,:], rev=true)[1:topn]]
 end
