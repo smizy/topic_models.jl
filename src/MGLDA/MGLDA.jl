@@ -7,6 +7,7 @@ struct returns
 end
 
 using StatsBase
+using ProgressMeter
 
 const α_loc = 0.5
 const α_gl  = 0.5
@@ -53,15 +54,15 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Tuple, T::I
     z_dsn = [[zeros(Int, N_ds) for (N_ds, X) in X_[d][1]] for d in 1:n_docs]
     v_dsn = [[zeros(Int, N_ds) for (N_ds, X) in X_[d][1]] for d in 1:n_docs]
 
-    N_dsv = [zeros(Int, length(X_[d][1]), length(X_[d][2])) for d in 1:n_docs]
+    N_dsv = [zeros(Int, length(X_[d][1]), length(X_[d][1]) + T - 1 ) for d in 1:n_docs]
 
-    N_dvr = [zeros(Int, length(X_[d][2]), 2) for d in 1:n_docs]
-    N_dv  = [zeros(Int, length(X_[d][2])) for d in 1:n_docs]
+    N_dvr = [zeros(Int, length(X_[d][1]) + T - 1, 2) for d in 1:n_docs]
+    N_dv  = [zeros(Int, length(X_[d][1]) + T - 1) for d in 1:n_docs]
 
     N_loc_zw  = zeros(Int, n_components[1], n_words)
     N_loc_z   = zeros(Int, n_components[1])
-    N_loc_dvz = [zeros(Int, length(X_[d][2]), n_components[1]) for d in 1:n_docs]
-    N_loc_dv  = [zeros(Int, length(X_[d][2])) for d in 1:n_docs]
+    N_loc_dvz = [zeros(Int, length(X_[d][1]) + T - 1, n_components[1]) for d in 1:n_docs]
+    N_loc_dv  = [zeros(Int, length(X_[d][1]) + T - 1) for d in 1:n_docs]
 
     N_gl_zw = zeros(Int, n_components[2], n_words)
     N_gl_z  = zeros(Int, n_components[2])
@@ -69,6 +70,7 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Tuple, T::I
     N_gl_d  = zeros(Int, n_docs)
 
     srand(0)
+    p = Progress(max_iter, 1, "Computing initial pass...", 50)
     @inbounds for iter in 1:max_iter
         @inbounds for d in 1:n_docs
             @inbounds for (s, (N_ds, X)) in enumerate(X_[d][1])
@@ -129,7 +131,7 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Tuple, T::I
                         log_p_vz = collect(Iterators.flatten(cat(2, log_p_loc_vz, log_p_gl_vz)))
                         p_vz     = exp.(log_p_vz - maximum(log_p_vz))
 
-                        ind_dsn        = sample(1:length(p_vz), WeightVec(p_vz / sum(p_vz)))
+                        ind_dsn        = sample(1:length(p_vz), Weights(p_vz / sum(p_vz)))
                         v_dsn[d][s][n] = s + rem(ind_dsn - 1, T)
 
                         if ind_dsn ≤ T * n_components[1]
@@ -167,6 +169,7 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Tuple, T::I
                 end
             end
         end
+        next!(p)
     end
 
     posteriori_estimation(corpus, n_components, T, N_dsv, N_dvr, N_loc_zw, N_loc_dvz, N_gl_zw, N_gl_dz)
@@ -201,11 +204,11 @@ function posteriori_estimation(corpus::Vector, n_components::Tuple, T::Int, N_ds
     # end
 
     n_words = length(corpus)
-    ϕ_loc   = (N_loc_zw + β) ./ (sum(N_loc_zw, 2) + β * n_words)
-    ϕ_gl    = (N_gl_zw + β) ./ (sum(N_gl_zw, 2) + β * n_words)
-    ϕ_zw    = cat(1, Φ_loc, Φ_gl)
+    Φ_loc   = (N_loc_zw + β) ./ (sum(N_loc_zw, 2) + β * n_words)
+    Φ_gl    = (N_gl_zw + β) ./ (sum(N_gl_zw, 2) + β * n_words)
+    Φ_zw    = cat(1, Φ_loc, Φ_gl)
 
-    global params = returns(ϕ_zw, corpus, n_components)
+    global params = returns(Φ_zw, corpus, n_components)
 end
 
 end # module
