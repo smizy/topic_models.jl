@@ -70,7 +70,7 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Tuple, T::I
     N_gl_d  = zeros(Int, n_docs)
 
     srand(0)
-    p = Progress(max_iter, 1, "Computing initial pass...", 50)
+    p = Progress(max_iter, 1, "Progress: ", 50)
     @inbounds for iter in 1:max_iter
         @inbounds for d in 1:n_docs
             @inbounds for (s, (N_ds, X)) in enumerate(X_[d][1])
