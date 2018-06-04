@@ -4,6 +4,8 @@ struct returns
     Φ_::Array{Float64,2}
     corpus::Vector{String}
     n_components::Tuple{Int,Int}
+    θ_loc_dsz::Vector{Array{Float64,2}}
+    θ_gl_dsz::Vector{Array{Float64,2}}
 end
 
 using StatsBase
@@ -176,39 +178,39 @@ function cgs(X_::Array, corpus::Vector, max_iter::Int, n_components::Tuple, T::I
 end
 
 function posteriori_estimation(corpus::Vector, n_components::Tuple, T::Int, N_dsv::Array, N_dvr::Array, N_loc_zw::Array, N_loc_dvz::Array, N_gl_zw::Array, N_gl_dz::Array)
-    # θ_loc_dsz = Vector{Array{Float64,2}}()
-    # θ_gl_dsz  = Vector{Array{Float64,2}}()
-    # θ_loc_dvz = Vector{Any}()
-    # θ_gl_dz   = (N_gl_dz + α_gl) ./ (sum(N_gl_dz, 2) + α_gl * n_components[2])
-    # π_loc_dv  = Vector{Any}()
-    # π_gl_dv   = Vector{Any}()
-    # ψ_dsv     = Vector{Any}()
-    # @inbounds for d in 1:size(N_dsv, 1)
-    #     push!(θ_loc_dvz, (N_loc_dvz[d] + α_loc) ./ (sum(N_loc_dvz[d], 2) + α_loc * n_components[1]))
-    #     push!(π_loc_dv, (N_dvr[d][:,1] + a) ./ (sum(N_dvr[d], 2) + a + b))
-    #     push!(π_gl_dv, (N_dvr[d][:,2] + b) ./ (sum(N_dvr[d], 2) + a + b))
-    #
-    #     push!(ψ_dsv, zeros(size(N_dsv[d])))
-    #     S = size(N_dsv[d], 1)
-    #     push!(θ_loc_dsz, zeros(S, n_components[1]))
-    #     push!(θ_gl_dsz, zeros(S, n_components[2]))
-    #     @inbounds for s in 1:S
-    #         @inbounds for t in 1:T
-    #             v = s + t - 1
-    #             ψ_dsv[d][s,v] = (N_dsv[d][s,v] + γ) / (sum(N_dsv[d][s,:]) + γ * T)
-    #
-    #             θ_loc_dsz[d][s,:] += ψ_dsv[d][s,v] * π_loc_dv[d][v] .* θ_loc_dvz[d][v,:]
-    #             θ_gl_dsz[d][s,:]  += ψ_dsv[d][s,v] * π_gl_dv[d][v] .* θ_gl_dz[d,:]
-    #         end
-    #     end
-    # end
+    θ_loc_dsz = Vector{Array{Float64,2}}()
+    θ_gl_dsz  = Vector{Array{Float64,2}}()
+    θ_loc_dvz = Vector{Any}()
+    θ_gl_dz   = (N_gl_dz + α_gl) ./ (sum(N_gl_dz, 2) + α_gl * n_components[2])
+    π_loc_dv  = Vector{Any}()
+    π_gl_dv   = Vector{Any}()
+    ψ_dsv     = Vector{Any}()
+    @inbounds for d in 1:size(N_dsv, 1)
+        push!(θ_loc_dvz, (N_loc_dvz[d] + α_loc) ./ (sum(N_loc_dvz[d], 2) + α_loc * n_components[1]))
+        push!(π_loc_dv, (N_dvr[d][:,1] + a) ./ (sum(N_dvr[d], 2) + a + b))
+        push!(π_gl_dv, (N_dvr[d][:,2] + b) ./ (sum(N_dvr[d], 2) + a + b))
+    
+        push!(ψ_dsv, zeros(size(N_dsv[d])))
+        S = size(N_dsv[d], 1)
+        push!(θ_loc_dsz, zeros(S, n_components[1]))
+        push!(θ_gl_dsz, zeros(S, n_components[2]))
+        @inbounds for s in 1:S
+            @inbounds for t in 1:T
+                v = s + t - 1
+                ψ_dsv[d][s,v] = (N_dsv[d][s,v] + γ) / (sum(N_dsv[d][s,:]) + γ * T)
+    
+                θ_loc_dsz[d][s,:] += ψ_dsv[d][s,v] * π_loc_dv[d][v] .* θ_loc_dvz[d][v,:]
+                θ_gl_dsz[d][s,:]  += ψ_dsv[d][s,v] * π_gl_dv[d][v] .* θ_gl_dz[d,:]
+            end
+        end
+    end
 
     n_words = length(corpus)
     Φ_loc   = (N_loc_zw + β) ./ (sum(N_loc_zw, 2) + β * n_words)
     Φ_gl    = (N_gl_zw + β) ./ (sum(N_gl_zw, 2) + β * n_words)
     Φ_zw    = cat(1, Φ_loc, Φ_gl)
 
-    global params = returns(Φ_zw, corpus, n_components)
+    global params = returns(Φ_zw, corpus, n_components, θ_loc_dsz, θ_gl_dsz)
 end
 
 end # module
